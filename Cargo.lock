@@ -221,6 +221,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "extended-keys-derive-rust"
+version = "0.1.0"
+dependencies = [
+ "bdk",
+]
+
+[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -730,13 +737,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "test-rust"
-version = "0.1.0"
-dependencies = [
- "bdk",
 ]
 
 [[package]]

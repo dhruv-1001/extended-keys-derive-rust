@@ -1,5 +1,5 @@
 [package]
-name = "test-rust"
+name = "extended-keys-derive-rust"
 version = "0.1.0"
 edition = "2021"
 
