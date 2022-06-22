@@ -17,7 +17,7 @@ fn main() {
     let mnemonic = generate_mnemonic(WordCount::Words12).unwrap();
     println!("{:?}", &mnemonic);
     let extended_priv_key = ExtendedPrivKey::new(
-        Network::Testnet, 
+        Network::Bitcoin, 
         mnemonic, None
     ).unwrap();
     println!("{:?}", extended_priv_key.to_string());
@@ -30,9 +30,9 @@ fn main() {
 
 fn generate_mnemonic(
     word_count: WordCount,
-) -> Result<Mnemonic, Error> {
+) -> Result<String, Error> {
     let mnemonic: GeneratedKey<_, BareCtx> = Mnemonic::generate((word_count, Language::English)).unwrap();
-    Ok(mnemonic.into_key())
+    Ok(mnemonic.to_string())
 }
 
 #[allow(dead_code)]
@@ -62,9 +62,10 @@ struct ExtendedPrivKey {
 impl ExtendedPrivKey {
     fn new(
         network: Network,
-        mnemonic: Mnemonic,
+        mnemonic: String,
         password: Option<String>,
     ) -> Result<Self, Error> {
+        let mnemonic = Mnemonic::parse_in(Language::English, mnemonic).unwrap();
         let xkey: ExtendedKey = (mnemonic.clone(), password).into_extended_key()?;
         let xprv = Mutex::new(
             xkey.into_xprv(network).unwrap()
