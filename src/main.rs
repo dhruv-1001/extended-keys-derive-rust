@@ -22,7 +22,7 @@ fn main() {
     ).unwrap();
     println!("{:?}", extended_priv_key.to_string());
     let derivation_path = DerivationPath::new("m/84'/1'/0'/0".to_string()).unwrap();
-    let derived_priv_key = extended_priv_key.derive_xprv(&derivation_path);
+    let derived_priv_key = extended_priv_key.derive_xprv(Some(derivation_path));
     println!("{:?}", derived_priv_key.to_string());
     let derived_pub_key = extended_priv_key.derive_xpub(derivation_path);
     println!("{:?}", derived_pub_key.to_string())
@@ -75,29 +75,40 @@ impl ExtendedPrivKey {
 
     fn derive_xprv(
         &self,
-        path: &DerivationPath,
+        derivation_path: Option<DerivationPath>,
     ) -> ExtendedPrivKey {
         let secp = Secp256k1::new();
-        let path = path.derivation_path.lock().unwrap().clone();
-        let derived_xprv = Mutex::new(
-            self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap()
-        );
-        ExtendedPrivKey { xprv: derived_xprv }
+        if let Some(derivation_path) = derivation_path {
+            let path = derivation_path.derivation_path.lock().unwrap().clone();
+            let derived_xprv = Mutex::new(
+                self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap()
+            );
+            ExtendedPrivKey { xprv: derived_xprv }
+        } else {
+            ExtendedPrivKey { 
+                xprv: Mutex::new(self.xprv.lock().unwrap().to_owned())
+            }
+        }
     }
 
     fn derive_xpub(
         &self,
-        path: DerivationPath,
+        derivation_path: Option<DerivationPath>,
     ) -> ExtendedPubKey {
         let secp = Secp256k1::new();
-        let path = path.derivation_path.lock().unwrap().clone();
-        let derived_xprv = Mutex::new(
-            self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap()
-        );
-        let derived_xpub = Mutex::new(
-            BdkExtendedPubKey::from_private(&secp, &derived_xprv.lock().unwrap())
-        );
-        ExtendedPubKey { xpub: derived_xpub }
+        if let Some(derivation_path) = derivation_path {
+            let path = derivation_path.derivation_path.lock().unwrap().clone();
+            let derived_xprv = self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap();
+            let derived_xpub = Mutex::new(
+                BdkExtendedPubKey::from_private(&secp, &derived_xprv)
+            )
+            ExtendedPubKey { xpub: derived_xpub }
+        } else {
+            let derived_xpub = Mutex::new(
+                BdkExtendedPubKey::from_private(&secp, &self.xprv.lock().unwrap().to_owned())
+            )
+            ExtendedPubKey { xpub: derived_xpub }
+        }
     }
 
     fn to_string(
