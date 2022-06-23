@@ -6,4 +6,4 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bdk = { version = "0.14", features = ["all-keys", "use-esplora-ureq", "sqlite"] }
+bdk = { version = "0.19", features = ["all-keys", "use-esplora-ureq", "sqlite-bundled"] }

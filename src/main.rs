@@ -90,12 +90,12 @@ impl ExtendedPrivKey {
         if let Some(derivation_path) = derivation_path {
             let path = derivation_path.derivation_path.lock().unwrap().clone();
             let derived_xprv = self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap();
-            let derived_xpub = BdkExtendedPubKey::from_private(&secp, &derived_xprv);
+            let derived_xpub = BdkExtendedPubKey::from_priv(&secp, &derived_xprv);
             Arc::new(ExtendedPubKey { 
                 xpub: Mutex::new(derived_xpub)
             })
         } else {
-            let derived_xpub = BdkExtendedPubKey::from_private(&secp, &self.xprv.lock().unwrap().clone());
+            let derived_xpub = BdkExtendedPubKey::from_priv(&secp, &self.xprv.lock().unwrap().clone());
             Arc::new(ExtendedPubKey { 
                 xpub: Mutex::new(derived_xpub) 
             })
