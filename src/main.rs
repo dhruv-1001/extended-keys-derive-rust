@@ -2,24 +2,20 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use bdk::bitcoin::secp256k1::Secp256k1;
-use bdk::bitcoin::{Network};
 use bdk::bitcoin::util::bip32::{
-    ExtendedPrivKey as BdkExtendedPrivKey, 
+    DerivationPath as BdkDerivationPath, ExtendedPrivKey as BdkExtendedPrivKey,
     ExtendedPubKey as BdkExtendedPubKey,
-    DerivationPath as BdkDerivationPath
 };
-use bdk::keys::{GeneratedKey, GeneratableKey, ExtendedKey, DerivableKey};
+use bdk::bitcoin::Network;
 use bdk::keys::bip39::{Language, Mnemonic, WordCount};
-use bdk::{Error as BdkError};
+use bdk::keys::{DerivableKey, ExtendedKey, GeneratableKey, GeneratedKey};
 use bdk::miniscript::BareCtx;
+use bdk::Error as BdkError;
 
 fn main() {
     let mnemonic = generate_mnemonic(WordCount::Words12).unwrap();
     println!("{:?}", &mnemonic);
-    let extended_priv_key = ExtendedPrivKey::new(
-        Network::Bitcoin, 
-        mnemonic, None
-    ).unwrap();
+    let extended_priv_key = ExtendedPrivKey::new(Network::Testnet, mnemonic, None).unwrap();
     println!("{:?}", extended_priv_key.to_string());
     let derivation_path_one = DerivationPath::new("m/84'/1'/0'/0".to_string()).unwrap();
     let derivation_path_two = DerivationPath::new("m/84'/1'/0'/0".to_string()).unwrap();
@@ -40,8 +36,8 @@ struct DerivationPath {
 impl DerivationPath {
     fn new(path: String) -> Result<Self, BdkError> {
         let path = BdkDerivationPath::from_str(&path).unwrap();
-        Ok(DerivationPath { 
-            derivation_path: Mutex::new(path) 
+        Ok(DerivationPath {
+            derivation_path: Mutex::new(path),
         })
     }
 }
@@ -51,53 +47,44 @@ struct ExtendedPrivKey {
 }
 
 impl ExtendedPrivKey {
-    fn new(
-        network: Network,
-        mnemonic: String,
-        password: Option<String>,
-    ) -> Result<Self, BdkError> {
+    fn new(network: Network, mnemonic: String, password: Option<String>) -> Result<Self, BdkError> {
         let mnemonic = Mnemonic::parse_in(Language::English, mnemonic).unwrap();
         let xkey: ExtendedKey = (mnemonic.clone(), password).into_extended_key()?;
         let xprv = xkey.into_xprv(network).unwrap();
-        Ok(ExtendedPrivKey { 
-            xprv: Mutex::new(xprv)
+        Ok(ExtendedPrivKey {
+            xprv: Mutex::new(xprv),
         })
     }
 
-    fn derive_xprv(
-        &self,
-        derivation_path: &Option<DerivationPath>,
-    ) -> Arc<ExtendedPrivKey> {
+    fn derive_xprv(&self, derivation_path: &Option<DerivationPath>) -> Arc<ExtendedPrivKey> {
         let secp = Secp256k1::new();
         if let Some(derivation_path) = derivation_path {
             let path = derivation_path.derivation_path.lock().unwrap().clone();
             let derived_xprv = self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap();
-            Arc::new(ExtendedPrivKey { 
+            Arc::new(ExtendedPrivKey {
                 xprv: Mutex::new(derived_xprv),
             })
         } else {
-            Arc::new (ExtendedPrivKey { 
-                xprv: Mutex::new(self.xprv.lock().unwrap().to_owned())
+            Arc::new(ExtendedPrivKey {
+                xprv: Mutex::new(self.xprv.lock().unwrap().to_owned()),
             })
         }
     }
 
-    fn derive_xpub(
-        &self,
-        derivation_path: &Option<DerivationPath>,
-    ) -> Arc<ExtendedPubKey> {
+    fn derive_xpub(&self, derivation_path: &Option<DerivationPath>) -> Arc<ExtendedPubKey> {
         let secp = Secp256k1::new();
         if let Some(derivation_path) = derivation_path {
             let path = derivation_path.derivation_path.lock().unwrap().clone();
             let derived_xprv = self.xprv.lock().unwrap().derive_priv(&secp, &path).unwrap();
             let derived_xpub = BdkExtendedPubKey::from_priv(&secp, &derived_xprv);
-            Arc::new(ExtendedPubKey { 
-                xpub: Mutex::new(derived_xpub)
+            Arc::new(ExtendedPubKey {
+                xpub: Mutex::new(derived_xpub),
             })
         } else {
-            let derived_xpub = BdkExtendedPubKey::from_priv(&secp, &self.xprv.lock().unwrap().clone());
-            Arc::new(ExtendedPubKey { 
-                xpub: Mutex::new(derived_xpub) 
+            let derived_xpub =
+                BdkExtendedPubKey::from_priv(&secp, &self.xprv.lock().unwrap().clone());
+            Arc::new(ExtendedPubKey {
+                xpub: Mutex::new(derived_xpub),
             })
         }
     }
@@ -107,20 +94,18 @@ impl ExtendedPrivKey {
     }
 }
 
-
 struct ExtendedPubKey {
     xpub: Mutex<BdkExtendedPubKey>,
 }
 
-impl ExtendedPubKey{
+impl ExtendedPubKey {
     fn to_string(&self) -> String {
         self.xpub.lock().unwrap().to_string()
     }
 }
 
-fn generate_mnemonic(
-    word_count: WordCount,
-) -> Result<String, BdkError> {
-    let mnemonic: GeneratedKey<_, BareCtx> = Mnemonic::generate((word_count, Language::English)).unwrap();
+fn generate_mnemonic(word_count: WordCount) -> Result<String, BdkError> {
+    let mnemonic: GeneratedKey<_, BareCtx> =
+        Mnemonic::generate((word_count, Language::English)).unwrap();
     Ok(mnemonic.to_string())
 }
