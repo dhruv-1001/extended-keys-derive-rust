@@ -15,18 +15,68 @@ use bdk::miniscript::BareCtx;
 use bdk::Error as BdkError;
 
 fn main() {
+    // deriving master extended key
     let mnemonic =
         "age nut kind clerk ceiling pony bright shrug identify rhythm blur topple".to_string();
     let descriptor_key = DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
-    println!("{:?}", descriptor_key.into_string());
-    let descriptor_key = DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
-    println!("{:?}", descriptor_key.as_public().into_string());
-    let derivation_path = DerivationPath::new("m/84'/1'/0'/0".to_string()).unwrap();
+    println!("master xprv -> {:?}", descriptor_key.into_string());
+    println!(
+        "master xpub -> {:?}",
+        descriptor_key.as_public().into_string()
+    );
+
+    // deriving child key m/0 from master key
     let origin_path = DerivationPath::new("m".to_string()).unwrap();
+    let derivation_path = DerivationPath::new("m/0".to_string()).unwrap();
     let derived_descriptor_key =
         descriptor_key.derive(Arc::new(origin_path), Some(Arc::new(derivation_path)));
-    println!("{:?}", derived_descriptor_key.into_string());
-    println!("{:?}", derived_descriptor_key.as_public().into_string());
+    println!("m/0    xprv -> {:?}", derived_descriptor_key.into_string());
+    println!(
+        "m/0    xpub -> {:?}",
+        derived_descriptor_key.as_public().into_string()
+    );
+
+    // deriving child key from m/0/0 from child key m/0
+    let derivation_path = DerivationPath::new("m/0".to_string()).unwrap();
+    let child_derivation_path = DerivationPath::new("m/0/0".to_string()).unwrap();
+    let child_derived_descriptor_key = derived_descriptor_key.derive(
+        Arc::new(derivation_path),
+        Some(Arc::new(child_derivation_path)),
+    );
+    println!(
+        "m/0/0  xprv -> {:?}",
+        child_derived_descriptor_key.into_string()
+    );
+    println!(
+        "m/0/0  xpub -> {:?}",
+        child_derived_descriptor_key.as_public().into_string()
+    );
+
+    // deriving child key m/0/0 from master key
+    let origin_path = DerivationPath::new("m".to_string()).unwrap();
+    let child_derivation_path = DerivationPath::new("m/0/0".to_string()).unwrap();
+    let child_descriptor_key_from_master =
+        descriptor_key.derive(Arc::new(origin_path), Some(Arc::new(child_derivation_path)));
+    println!(
+        "m/0/0  xprv -> {:?}",
+        child_descriptor_key_from_master.into_string()
+    );
+    println!(
+        "m/0/0  xpub -> {:?}",
+        child_descriptor_key_from_master.as_public().into_string()
+    );
+
+    // deriving public child key m/0/0 form public key m/0
+    let derivation_path = DerivationPath::new("m/0".to_string()).unwrap();
+    let child_derivation_path = DerivationPath::new("m/0/0".to_string()).unwrap();
+    let child_public_key_form_public_key = child_derived_descriptor_key.as_public().derive(
+        Arc::new(derivation_path),
+        Some(Arc::new(child_derivation_path)),
+    );
+    println!(
+        "m/0/0  xpub -> {:?}",
+        child_public_key_form_public_key.into_string()
+    );
 }
 
 #[allow(dead_code)]
