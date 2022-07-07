@@ -17,54 +17,32 @@ use bdk::Error as BdkError;
 fn main() {
     // deriving master extended key
     let mnemonic =
-        "age nut kind clerk ceiling pony bright shrug identify rhythm blur topple".to_string();
+        "chaos fabric time speed sponsor all flat solution wisdom trophy crack object robot pave observe combine where aware bench orient secret primary cable detect".to_string();
     let master_key = DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
-    println!("master xprv -> {:?}", master_key.into_string());
-    println!("master xpub -> {:?}", master_key.as_public().into_string());
+    println!("master");
+    println!("xprv    ->    {:?}", master_key.into_string());
+    println!("xpub    ->    {:?}", master_key.as_public().into_string());
+    derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
+    let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
+    derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
+    derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
+}
 
-    // deriving child key m/0 from master key
-    let origin_path = DerivationPath::new("m".to_string()).unwrap();
-    let level_one_path = DerivationPath::new("m/0".to_string()).unwrap();
-    println!("{:?}", &origin_path);
-    println!("{:?}", &level_one_path);
-    let level_one_key = master_key.derive(Arc::new(origin_path), Some(Arc::new(level_one_path)));
-    println!("m/0    xprv -> {:?}", level_one_key.into_string());
+fn derive_descriptor_key(
+    descriptor_key: &DescriptorKey,
+    from_path: String,
+    to_path: String,
+) -> Arc<DescriptorKey> {
+    let origin_path = Arc::new(DerivationPath::new(from_path.clone()).unwrap());
+    let derivation_path = Some(Arc::new(DerivationPath::new(to_path.clone()).unwrap()));
+    let derived_descriptor_key = descriptor_key.derive(origin_path, derivation_path);
+    println!("{} -> {}", from_path.to_string(), to_path.to_string());
+    println!("xprv    ->    {:?}", derived_descriptor_key.into_string());
     println!(
-        "m/0    xpub -> {:?}",
-        level_one_key.as_public().into_string()
+        "xpub    ->    {:?}",
+        derived_descriptor_key.as_public().into_string()
     );
-
-    // deriving child key from m/0/0 from child key m/0
-    // let level_one_path = DerivationPath::new("m".to_string()).unwrap();
-    // let level_two_path = DerivationPath::new("m/0".to_string()).unwrap();
-    // let level_two_key =
-    //     level_one_key.derive(Arc::new(level_one_path), Some(Arc::new(level_two_path)));
-    // println!("m/0/0  xprv -> {:?}", level_two_key.into_string());
-    // println!(
-    //     "m/0/0  xpub -> {:?}",
-    //     level_two_key.as_public().into_string()
-    // );
-
-    // deriving child key m/0/0 from master key
-    // let origin_path = DerivationPath::new("m".to_string()).unwrap();
-    // let level_two_path = DerivationPath::new("m/0/0".to_string()).unwrap();
-    // let level_two_key = master_key.derive(Arc::new(origin_path), Some(Arc::new(level_two_path)));
-    // println!("m/0/0  xprv -> {:?}", level_two_key.into_string());
-    // println!(
-    //     "m/0/0  xpub -> {:?}",
-    //     level_two_key.as_public().into_string()
-    // );
-
-    // deriving public child key m/0/0 form public key m/0
-    // let level_one_path = DerivationPath::new("m".to_string()).unwrap();
-    // let level_two_path = DerivationPath::new("m/0".to_string()).unwrap();
-    // let child_public_key_form_public_key = level_one_key
-    //     .as_public()
-    //     .derive(Arc::new(level_one_path), Some(Arc::new(level_two_path)));
-    // println!(
-    //     "m/0/0  xpub -> {:?}",
-    //     child_public_key_form_public_key.into_string()
-    // );
+    derived_descriptor_key
 }
 
 #[allow(dead_code)]
@@ -125,7 +103,7 @@ impl DescriptorKey {
             .unwrap()
             .deref()
             .clone();
-        let path = derivation_path
+        let derivation_path = derivation_path
             .map(|dp| dp.derivation_path_mutex.lock().unwrap().deref().clone())
             .unwrap_or_default();
         match root_key.deref() {
@@ -133,7 +111,7 @@ impl DescriptorKey {
                 let key_source: KeySource = (xpub.xkey.fingerprint(), root_path.clone());
                 let derived_xpub = xpub.xkey.derive_pub(&secp, &root_path).unwrap().clone();
                 let derived_descriptor_key = derived_xpub
-                    .into_descriptor_key(Some(key_source), path)
+                    .into_descriptor_key(Some(key_source), derivation_path)
                     .unwrap();
                 Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(derived_descriptor_key),
@@ -143,7 +121,7 @@ impl DescriptorKey {
                 let key_source: KeySource = (xprv.xkey.fingerprint(&secp), root_path.clone());
                 let derived_xprv = xprv.xkey.derive_priv(&secp, &root_path).unwrap();
                 let derived_descriptor_key = derived_xprv
-                    .into_descriptor_key(Some(key_source), path)
+                    .into_descriptor_key(Some(key_source), derivation_path)
                     .unwrap();
                 Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(derived_descriptor_key),
