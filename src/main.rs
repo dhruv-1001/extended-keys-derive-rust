@@ -18,16 +18,53 @@ fn main() {
     // deriving master extended key
     let mnemonic =
         "chaos fabric time speed sponsor all flat solution wisdom trophy crack object robot pave observe combine where aware bench orient secret primary cable detect".to_string();
-    let master_key = DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
-    println!("master");
-    println!("xprv    ->    {:?}", master_key.into_string());
-    println!("xpub    ->    {:?}", master_key.as_public().into_string());
-    derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
-    let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
-    derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
-    derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
+    let master_key = &DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
+    // show_descriptor_key_data_for_master(master_key);
+    // let master_key_mutex = master_key.descriptor_key_mutex.lock().unwrap();
+    // println!("master");
+    // println!("xprv    ->    {:?}", master_key.into_string());
+    // println!("xpub    ->    {:?}", master_key.as_public().into_string());
+    // derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
+    // let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
+    // derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
+    // derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
+    // show_descriptor_key_data(master_key_mutex.deref());
+    let key_m_0h = derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
+    show_descriptor_key_data(key_m_0h);
+    // let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
+    // show_descriptor_key_data(key_m_0);
+    // let key_m_0_more = derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
+    // show_descriptor_key_data(key_m_0_more);
 }
 
+/*
+master
+xprv            tprv8ZgxMBicQKsPdWuqM1t1CDRvQtQuBPyfL6GbhQwtxDKgUAVPbxmj71pRA8raTqLrec5LyTs5TqCxdABcZr77bt2KyWA5bizJHnC4g4ysm4h
+origin          None
+derivation path "m"
+wildcard        Unhardened
+================
+m/0
+xprv            tprv8d7Y4JLmD25jkKbyDZXcdoPHu1YtMHuH21qeN7mFpjfumtSU7eZimFYUCSa3MYzkEYfSNRBV34GEr2QXwZCMYRZ7M1g6PUtiLhbJhBZEGYJ
+origin          Some((d1d04177, m/0))
+derivation path "m"
+wildcard        Unhardened
+================
+m/84h/1h/0h
+xprv            tprv8ggvTQxsWK3arZcqrGUCwPLrB3X4ddxfbEn8rgKY3iMfvuxwnSJQxNctCWPJnURqn56y1ZLuerpBMDzYdbYRTc3Fb6edergqqL6RynmhLjn
+origin          Some((d1d04177, m/84'/1'/0'))
+derivation path "m"
+wildcard        Unhardened
+================
+m/84h/1h/0h, descriptor_path m/0
+xprv            tprv8iNNgZxAQGhz6husf5BtuA5g5eyKSk1VRg3cG3DUSStGvewyuWVzY3obv45EMzBQWZbxg1kUNerrvKwrXkr74MgcXPfZLk1mapiVDMHNUHs
+origin          Some((40728c21, m/84'/1'/0'))
+derivation path "m/0"
+wildcard        Unhardened
+================
+*/
+
+#[allow(dead_code)]
 fn derive_descriptor_key(
     descriptor_key: &DescriptorKey,
     from_path: String,
@@ -36,13 +73,56 @@ fn derive_descriptor_key(
     let origin_path = Arc::new(DerivationPath::new(from_path.clone()).unwrap());
     let derivation_path = Some(Arc::new(DerivationPath::new(to_path.clone()).unwrap()));
     let derived_descriptor_key = descriptor_key.derive(origin_path, derivation_path);
-    println!("{} -> {}", from_path.to_string(), to_path.to_string());
-    println!("xprv    ->    {:?}", derived_descriptor_key.into_string());
-    println!(
-        "xpub    ->    {:?}",
-        derived_descriptor_key.as_public().into_string()
-    );
+    // println!("{} -> {}", from_path.to_string(), to_path.to_string());
+    // println!("xprv    ->    {:?}", derived_descriptor_key.into_string());
+    // println!(
+    //     "xpub    ->    {:?}",
+    //     derived_descriptor_key.as_public().into_string()
+    // );
     derived_descriptor_key
+}
+
+#[allow(dead_code)]
+fn show_descriptor_key_data(descriptor_key: Arc<DescriptorKey>) {
+    let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
+    match key.deref() {
+        BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
+            println!("xprv            {}",   xprv.xkey.to_string());
+            println!("origin          {:?}", xprv.origin);
+            println!("derivation path {:?}", xprv.derivation_path.to_string());
+            println!("wildcard        {:?}", xprv.wildcard);
+            return
+        },
+        BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
+            println!("xprv            {}",   xpub.xkey.to_string());
+            println!("origin          {:?}", xpub.origin);
+            println!("derivation path {:?}", xpub.derivation_path.to_string());
+            println!("wildcard        {:?}", xpub.wildcard);
+            return
+        }
+        _ => todo!(),
+    }
+}
+
+fn show_descriptor_key_data_for_master(descriptor_key: &DescriptorKey) {
+    let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
+    match key.deref() {
+        BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
+            println!("xprv            {}",   xprv.xkey.to_string());
+            println!("origin          {:?}", xprv.origin);
+            println!("derivation path {:?}", xprv.derivation_path.to_string());
+            println!("wildcard        {:?}", xprv.wildcard);
+            return
+        },
+        BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
+            println!("xprv            {}",   xpub.xkey.to_string());
+            println!("origin          {:?}", xpub.origin);
+            println!("derivation path {:?}", xpub.derivation_path.to_string());
+            println!("wildcard        {:?}", xpub.wildcard);
+            return
+        }
+        _ => todo!(),
+    }
 }
 
 #[allow(dead_code)]
