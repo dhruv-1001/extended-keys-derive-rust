@@ -23,23 +23,23 @@ pub fn lib_main() {
 
     // derive m/0 from master
     let derived_des: &DescriptorSecretKey = &derive_key(&master_des, "m/0");
-    show_descriptor_x_key(&derived_des, "derive m/0 from master");
+    show_descriptor_x_key(derived_des, "derive m/0 from master");
 
     // extend m/0 from master
     let extended_des: &DescriptorSecretKey = &extend_key(&master_des, "m/0");
-    show_descriptor_x_key(&extended_des, "extend m/0 from master");
+    show_descriptor_x_key(extended_des, "extend m/0 from master");
 
     // derive m/0 and extend m/0 from master
-    let extend_derived_des: &DescriptorSecretKey = &extend_key(&derived_des, "m/0");
-    show_descriptor_x_key(&extend_derived_des, "derive m/0 and extend m/0");
+    let extend_derived_des: &DescriptorSecretKey = &extend_key(derived_des, "m/0");
+    show_descriptor_x_key(extend_derived_des, "derive m/0 and extend m/0");
 
     // extend m/0 and extend m/0 from master
-    let extend_extended_des: &DescriptorSecretKey = &extend_key(&extended_des, "m/0");
-    show_descriptor_x_key(&extend_extended_des, "extend m/0 and extend m/0");
+    let extend_extended_des: &DescriptorSecretKey = &extend_key(extended_des, "m/0");
+    show_descriptor_x_key(extend_extended_des, "extend m/0 and extend m/0");
 
     // extend m/0 and derive m/0 from master
-    let derive_extended_des = &derive_key(&extended_des, "m/0");
-    show_descriptor_x_key(&derive_extended_des, "extend m/0 and derive m/0");
+    let derive_extended_des = &derive_key(extended_des, "m/0");
+    show_descriptor_x_key(derive_extended_des, "extend m/0 and derive m/0");
 }
 
 fn derive_key(key: &DescriptorSecretKey, path: &str) -> Arc<DescriptorSecretKey> {
@@ -54,10 +54,7 @@ fn extend_key(key: &DescriptorSecretKey, path: &str) -> Arc<DescriptorSecretKey>
 
 fn show_descriptor_x_key(key: &DescriptorSecretKey, message: &str) {
     println!("{}", message);
-    println!(
-        "{}",
-        key.descriptor_secret_key_mutex.lock().unwrap().to_string()
-    );
+    println!("{}", key.descriptor_secret_key_mutex.lock().unwrap());
     let descriptor_secret_key = key.descriptor_secret_key_mutex.lock().unwrap();
     let key = match descriptor_secret_key.deref() {
         BdkDescriptorSecretKey::XPrv(key) => Some(key),
@@ -65,7 +62,7 @@ fn show_descriptor_x_key(key: &DescriptorSecretKey, message: &str) {
     }
     .unwrap();
 
-    println!("xkey            -> {}", key.xkey.to_string());
+    println!("xkey            -> {}", key.xkey);
     println!("origin          -> {:?}", key.origin);
     println!("derivation_path -> {:?}", key.derivation_path);
     println!("wildcard        -> {:?}", key.wildcard);
@@ -105,8 +102,8 @@ impl DescriptorSecretKey {
         .unwrap();
         let derived_xprv = descriptor_x_key.xkey.derive_priv(&secp, &path)?;
         let key_source = match descriptor_x_key.origin.clone() {
-            Some((fingerprint, origin_path)) => (fingerprint, origin_path.extend(path.clone())),
-            None => (descriptor_x_key.xkey.fingerprint(&secp), path.clone()),
+            Some((fingerprint, origin_path)) => (fingerprint, origin_path.extend(path)),
+            None => (descriptor_x_key.xkey.fingerprint(&secp), path),
         };
         let derived_descriptor_secret_key = BdkDescriptorSecretKey::XPrv(DescriptorXKey {
             origin: Some(key_source),
@@ -175,8 +172,8 @@ impl DescriptorPublicKey {
         .unwrap();
         let derived_xpub = descriptor_x_key.xkey.derive_pub(&secp, &path)?;
         let key_source = match descriptor_x_key.origin.clone() {
-            Some((fingerprint, origin_path)) => (fingerprint, origin_path.extend(path.clone())),
-            None => (descriptor_x_key.xkey.fingerprint(), path.clone()),
+            Some((fingerprint, origin_path)) => (fingerprint, origin_path.extend(path)),
+            None => (descriptor_x_key.xkey.fingerprint(), path),
         };
         let derived_descriptor_public_key = BdkDescriptorPublicKey::XPub(DescriptorXKey {
             origin: Some(key_source),

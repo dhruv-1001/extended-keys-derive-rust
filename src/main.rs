@@ -44,26 +44,26 @@ fn this_main() {
 
     // derive m/0 from master
     let derived_des: &DescriptorKey = &derive_key(&master_des, "m/0");
-    show_descriptor_key_data(&derived_des, "derive m/0 from master");
+    show_descriptor_key_data(derived_des, "derive m/0 from master");
 
     // extend m/0 from master
     let extended_des = &extend_key(&master_des, "m/0");
-    show_descriptor_key_data(&extended_des, "extend m/0 from master");
+    show_descriptor_key_data(extended_des, "extend m/0 from master");
 
     // derive m/0 and extend m/0 from master
-    let extend_derived_des: &DescriptorKey = &extend_key(&derived_des, "m/0");
-    show_descriptor_key_data(&extend_derived_des, "derive m/0 and extend m/0");
+    let extend_derived_des: &DescriptorKey = &extend_key(derived_des, "m/0");
+    show_descriptor_key_data(extend_derived_des, "derive m/0 and extend m/0");
 
     // extend m/0 and extend m/0 from master
-    let extend_extended_des: &DescriptorKey = &extend_key(&extended_des, "m/0");
-    show_descriptor_key_data(&extend_extended_des, "extend m/0 and extend m/0");
+    let extend_extended_des: &DescriptorKey = &extend_key(extended_des, "m/0");
+    show_descriptor_key_data(extend_extended_des, "extend m/0 and extend m/0");
 
     // extend m/0 and derive m/0 from master
-    let derive_extended_des = &derive_key(&extended_des, "m/0");
-    show_descriptor_key_data(&derive_extended_des, "extend m/0 and derive m/0");
+    let derive_extended_des = &derive_key(extended_des, "m/0");
+    show_descriptor_key_data(derive_extended_des, "extend m/0 and derive m/0");
 
     let derive_hardened_des = &derive_key(&master_des, "m/84h/1h/0h");
-    show_descriptor_key_data(&derive_hardened_des, "derive m/84h/1h/0h from master")
+    show_descriptor_key_data(derive_hardened_des, "derive m/84h/1h/0h from master")
 }
 
 #[allow(dead_code)]
@@ -84,21 +84,21 @@ fn show_descriptor_key_data(descriptor_key: &DescriptorKey, message: &str) {
     let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
     match key.deref() {
         BdkDescriptorKey::Secret(key, _, _) => {
-            println!("{}", key.to_string())
+            println!("{}", key)
         }
         BdkDescriptorKey::Public(key, _, _) => {
-            println!("{}", key.to_string())
+            println!("{}", key)
         }
     }
     match key.deref() {
         BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-            println!("xkey            -> {}", xprv.xkey.to_string());
+            println!("xkey            -> {}", xprv.xkey);
             println!("origin          -> {:?}", xprv.origin);
             println!("derivation_path -> {:?}", xprv.derivation_path);
             println!("wildcard        -> {:?}", xprv.wildcard);
         }
         BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-            println!("xkey            -> {}", xpub.xkey.to_string());
+            println!("xkey            -> {}", xpub.xkey);
             println!("origin          -> {:?}", xpub.origin);
             println!("derivation_path -> {:?}", xpub.derivation_path);
             println!("wildcard        -> {:?}", xpub.wildcard);
