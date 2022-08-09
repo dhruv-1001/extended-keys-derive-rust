@@ -29,8 +29,10 @@ fn main() {
     // derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
     // derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
     // show_descriptor_key_data(master_key_mutex.deref());
-    let key_m_0h = derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
-    show_descriptor_key_data(key_m_0h);
+    let self_derive = derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
+    show_descriptor_key_data(self_derive);
+    // let key_m_0h = derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
+    // show_descriptor_key_data(key_m_0h);
     // let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
     // show_descriptor_key_data(key_m_0);
     // let key_m_0_more = derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
@@ -41,6 +43,12 @@ fn main() {
 master
 xprv            tprv8ZgxMBicQKsPdWuqM1t1CDRvQtQuBPyfL6GbhQwtxDKgUAVPbxmj71pRA8raTqLrec5LyTs5TqCxdABcZr77bt2KyWA5bizJHnC4g4ysm4h
 origin          None
+derivation path "m"
+wildcard        Unhardened
+================
+m
+xprv            tprv8ZgxMBicQKsPdWuqM1t1CDRvQtQuBPyfL6GbhQwtxDKgUAVPbxmj71pRA8raTqLrec5LyTs5TqCxdABcZr77bt2KyWA5bizJHnC4g4ysm4h
+origin          Some((d1d04177, m))
 derivation path "m"
 wildcard        Unhardened
 ================
@@ -87,39 +95,40 @@ fn show_descriptor_key_data(descriptor_key: Arc<DescriptorKey>) {
     let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
     match key.deref() {
         BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-            println!("xprv            {}",   xprv.xkey.to_string());
+            println!("xprv            {}", xprv.xkey.to_string());
             println!("origin          {:?}", xprv.origin);
             println!("derivation path {:?}", xprv.derivation_path.to_string());
             println!("wildcard        {:?}", xprv.wildcard);
-            return
-        },
+            return;
+        }
         BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-            println!("xprv            {}",   xpub.xkey.to_string());
+            println!("xprv            {}", xpub.xkey.to_string());
             println!("origin          {:?}", xpub.origin);
             println!("derivation path {:?}", xpub.derivation_path.to_string());
             println!("wildcard        {:?}", xpub.wildcard);
-            return
+            return;
         }
         _ => todo!(),
     }
 }
 
+#[allow(dead_code)]
 fn show_descriptor_key_data_for_master(descriptor_key: &DescriptorKey) {
     let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
     match key.deref() {
         BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-            println!("xprv            {}",   xprv.xkey.to_string());
+            println!("xprv            {}", xprv.xkey.to_string());
             println!("origin          {:?}", xprv.origin);
             println!("derivation path {:?}", xprv.derivation_path.to_string());
             println!("wildcard        {:?}", xprv.wildcard);
-            return
-        },
+            return;
+        }
         BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-            println!("xprv            {}",   xpub.xkey.to_string());
+            println!("xprv            {}", xpub.xkey.to_string());
             println!("origin          {:?}", xpub.origin);
             println!("derivation path {:?}", xpub.derivation_path.to_string());
             println!("wildcard        {:?}", xpub.wildcard);
-            return
+            return;
         }
         _ => todo!(),
     }
