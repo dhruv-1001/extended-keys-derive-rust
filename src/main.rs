@@ -14,124 +14,98 @@ use bdk::keys::{
 use bdk::miniscript::BareCtx;
 use bdk::Error as BdkError;
 
-fn main() {
-    // deriving master extended key
-    let mnemonic =
-        "chaos fabric time speed sponsor all flat solution wisdom trophy crack object robot pave observe combine where aware bench orient secret primary cable detect".to_string();
-    let master_key = &DescriptorKey::new(Network::Testnet, mnemonic.clone(), None).unwrap();
-    // show_descriptor_key_data_for_master(master_key);
-    // let master_key_mutex = master_key.descriptor_key_mutex.lock().unwrap();
-    // println!("master");
-    // println!("xprv    ->    {:?}", master_key.into_string());
-    // println!("xpub    ->    {:?}", master_key.as_public().into_string());
-    // derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
-    // let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
-    // derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
-    // derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
-    // show_descriptor_key_data(master_key_mutex.deref());
-    let self_derive = derive_descriptor_key(&master_key, "m".to_string(), "m".to_string());
-    show_descriptor_key_data(self_derive);
-    // let key_m_0h = derive_descriptor_key(&master_key, "m/84h/1h/0h".to_string(), "m".to_string());
-    // show_descriptor_key_data(key_m_0h);
-    // let key_m_0 = derive_descriptor_key(&master_key, "m/0".to_string(), "m".to_string());
-    // show_descriptor_key_data(key_m_0);
-    // let key_m_0_more = derive_descriptor_key(&key_m_0, "m/84h/1h/0h".to_string(), "m/0".to_string());
-    // show_descriptor_key_data(key_m_0_more);
-}
+#[allow(unused_imports)]
+use extended_keys_derive_rust::lib_main;
 
 /*
-master
-xprv            tprv8ZgxMBicQKsPdWuqM1t1CDRvQtQuBPyfL6GbhQwtxDKgUAVPbxmj71pRA8raTqLrec5LyTs5TqCxdABcZr77bt2KyWA5bizJHnC4g4ysm4h
-origin          None
-derivation path "m"
-wildcard        Unhardened
-================
-m
-xprv            tprv8ZgxMBicQKsPdWuqM1t1CDRvQtQuBPyfL6GbhQwtxDKgUAVPbxmj71pRA8raTqLrec5LyTs5TqCxdABcZr77bt2KyWA5bizJHnC4g4ysm4h
-origin          Some((d1d04177, m))
-derivation path "m"
-wildcard        Unhardened
-================
-m/0
-xprv            tprv8d7Y4JLmD25jkKbyDZXcdoPHu1YtMHuH21qeN7mFpjfumtSU7eZimFYUCSa3MYzkEYfSNRBV34GEr2QXwZCMYRZ7M1g6PUtiLhbJhBZEGYJ
-origin          Some((d1d04177, m/0))
-derivation path "m"
-wildcard        Unhardened
-================
-m/84h/1h/0h
-xprv            tprv8ggvTQxsWK3arZcqrGUCwPLrB3X4ddxfbEn8rgKY3iMfvuxwnSJQxNctCWPJnURqn56y1ZLuerpBMDzYdbYRTc3Fb6edergqqL6RynmhLjn
-origin          Some((d1d04177, m/84'/1'/0'))
-derivation path "m"
-wildcard        Unhardened
-================
-m/84h/1h/0h, descriptor_path m/0
-xprv            tprv8iNNgZxAQGhz6husf5BtuA5g5eyKSk1VRg3cG3DUSStGvewyuWVzY3obv45EMzBQWZbxg1kUNerrvKwrXkr74MgcXPfZLk1mapiVDMHNUHs
-origin          Some((40728c21, m/84'/1'/0'))
-derivation path "m/0"
-wildcard        Unhardened
-================
+
+    Test cases
+    generate master
+    derive m/0 from master
+    extend m/0 from master
+    extend m/0 from derived m/0 from master
+    derive m/0 from extended m/0 from master
+
 */
 
-#[allow(dead_code)]
-fn derive_descriptor_key(
-    descriptor_key: &DescriptorKey,
-    from_path: String,
-    to_path: String,
-) -> Arc<DescriptorKey> {
-    let origin_path = Arc::new(DerivationPath::new(from_path.clone()).unwrap());
-    let derivation_path = Some(Arc::new(DerivationPath::new(to_path.clone()).unwrap()));
-    let derived_descriptor_key = descriptor_key.derive(origin_path, derivation_path);
-    // println!("{} -> {}", from_path.to_string(), to_path.to_string());
-    // println!("xprv    ->    {:?}", derived_descriptor_key.into_string());
-    // println!(
-    //     "xpub    ->    {:?}",
-    //     derived_descriptor_key.as_public().into_string()
-    // );
-    derived_descriptor_key
+fn main() {
+    this_main();
+    // lib_main();
 }
 
 #[allow(dead_code)]
-fn show_descriptor_key_data(descriptor_key: Arc<DescriptorKey>) {
-    let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
-    match key.deref() {
-        BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-            println!("xprv            {}", xprv.xkey.to_string());
-            println!("origin          {:?}", xprv.origin);
-            println!("derivation path {:?}", xprv.derivation_path.to_string());
-            println!("wildcard        {:?}", xprv.wildcard);
-            return;
-        }
-        BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-            println!("xprv            {}", xpub.xkey.to_string());
-            println!("origin          {:?}", xpub.origin);
-            println!("derivation path {:?}", xpub.derivation_path.to_string());
-            println!("wildcard        {:?}", xpub.wildcard);
-            return;
-        }
-        _ => todo!(),
-    }
+fn this_main() {
+    println!("\nDescriptorKey\n\n");
+    // master
+    let mnemonic =
+        "chaos fabric time speed sponsor all flat solution wisdom trophy crack object robot pave observe combine where aware bench orient secret primary cable detect".to_string();
+    let master_des = DescriptorKey::new(Network::Testnet, mnemonic, None).unwrap();
+    show_descriptor_key_data(&master_des, "master");
+
+    // derive m/0 from master
+    let derived_des: &DescriptorKey = &derive_key(&master_des, "m/0");
+    show_descriptor_key_data(&derived_des, "derive m/0 from master");
+
+    // extend m/0 from master
+    let extended_des = &extend_key(&master_des, "m/0");
+    show_descriptor_key_data(&extended_des, "extend m/0 from master");
+
+    // derive m/0 and extend m/0 from master
+    let extend_derived_des: &DescriptorKey = &extend_key(&derived_des, "m/0");
+    show_descriptor_key_data(&extend_derived_des, "derive m/0 and extend m/0");
+
+    // extend m/0 and extend m/0 from master
+    let extend_extended_des: &DescriptorKey = &extend_key(&extended_des, "m/0");
+    show_descriptor_key_data(&extend_extended_des, "extend m/0 and extend m/0");
+
+    // extend m/0 and derive m/0 from master
+    let derive_extended_des = &derive_key(&extended_des, "m/0");
+    show_descriptor_key_data(&derive_extended_des, "extend m/0 and derive m/0");
+
+    let derive_hardened_des = &derive_key(&master_des, "m/84h/1h/0h");
+    show_descriptor_key_data(&derive_hardened_des, "derive m/84h/1h/0h from master")
 }
 
 #[allow(dead_code)]
-fn show_descriptor_key_data_for_master(descriptor_key: &DescriptorKey) {
+fn derive_key(key: &DescriptorKey, path: &str) -> Arc<DescriptorKey> {
+    let path = Arc::new(DerivationPath::new(path.to_string()).unwrap());
+    key.derive(Some(path), None).unwrap()
+}
+
+#[allow(dead_code)]
+fn extend_key(key: &DescriptorKey, path: &str) -> Arc<DescriptorKey> {
+    let path = Arc::new(DerivationPath::new(path.to_string()).unwrap());
+    key.derive(None, Some(path)).unwrap()
+}
+
+#[allow(dead_code)]
+fn show_descriptor_key_data(descriptor_key: &DescriptorKey, message: &str) {
+    println!("{}", message);
     let key = descriptor_key.descriptor_key_mutex.lock().unwrap();
     match key.deref() {
+        BdkDescriptorKey::Secret(key, _, _) => {
+            println!("{}", key.to_string())
+        }
+        BdkDescriptorKey::Public(key, _, _) => {
+            println!("{}", key.to_string())
+        }
+    }
+    match key.deref() {
         BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-            println!("xprv            {}", xprv.xkey.to_string());
-            println!("origin          {:?}", xprv.origin);
-            println!("derivation path {:?}", xprv.derivation_path.to_string());
-            println!("wildcard        {:?}", xprv.wildcard);
-            return;
+            println!("xkey            -> {}", xprv.xkey.to_string());
+            println!("origin          -> {:?}", xprv.origin);
+            println!("derivation_path -> {:?}", xprv.derivation_path);
+            println!("wildcard        -> {:?}", xprv.wildcard);
         }
         BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-            println!("xprv            {}", xpub.xkey.to_string());
-            println!("origin          {:?}", xpub.origin);
-            println!("derivation path {:?}", xpub.derivation_path.to_string());
-            println!("wildcard        {:?}", xpub.wildcard);
-            return;
+            println!("xkey            -> {}", xpub.xkey.to_string());
+            println!("origin          -> {:?}", xpub.origin);
+            println!("derivation_path -> {:?}", xpub.derivation_path);
+            println!("wildcard        -> {:?}", xpub.wildcard);
         }
         _ => todo!(),
     }
+    println!("================================")
 }
 
 #[allow(dead_code)]
@@ -169,7 +143,7 @@ impl DescriptorKey {
     fn new(network: Network, mnemonic: String, password: Option<String>) -> Result<Self, BdkError> {
         let mnemonic = Mnemonic::parse_in(Language::English, mnemonic)
             .map_err(|e| BdkError::Generic(e.to_string()))?;
-        let xkey: ExtendedKey = (mnemonic.clone(), password).into_extended_key()?;
+        let xkey: ExtendedKey = (mnemonic, password).into_extended_key()?;
         let descriptor_key = xkey
             .into_xprv(network)
             .unwrap()
@@ -181,45 +155,44 @@ impl DescriptorKey {
 
     fn derive(
         &self,
-        origin_path: Arc<DerivationPath>,
-        derivation_path: Option<Arc<DerivationPath>>,
-    ) -> Arc<DescriptorKey> {
+        origin_path: Option<Arc<DerivationPath>>,
+        descriptor_path: Option<Arc<DerivationPath>>,
+    ) -> Result<Arc<DescriptorKey>, BdkError> {
         let secp = Secp256k1::new();
         let root_key = self.descriptor_key_mutex.lock().unwrap();
-        let root_path = origin_path
-            .derivation_path_mutex
-            .lock()
-            .unwrap()
-            .deref()
-            .clone();
-        let derivation_path = derivation_path
+        let root_path =
+            origin_path.map(|op| op.derivation_path_mutex.lock().unwrap().deref().clone());
+        let descriptor_path = descriptor_path
             .map(|dp| dp.derivation_path_mutex.lock().unwrap().deref().clone())
             .unwrap_or_default();
         match root_key.deref() {
             BdkDescriptorKey::Public(DescriptorPublicKey::XPub(xpub), _, _) => {
-                let key_source: KeySource = (xpub.xkey.fingerprint(), root_path.clone());
-                let derived_xpub = xpub.xkey.derive_pub(&secp, &root_path).unwrap().clone();
-                let derived_descriptor_key = derived_xpub
-                    .into_descriptor_key(Some(key_source), derivation_path)
-                    .unwrap();
-                Arc::new(DescriptorKey {
+                let derived_descriptor_key = if let Some(path) = root_path {
+                    let key_source: KeySource = (xpub.xkey.fingerprint(), path.clone());
+                    let derived_xpub = xpub.xkey.derive_pub(&secp, &path)?;
+                    derived_xpub.into_descriptor_key(Some(key_source), descriptor_path)?
+                } else {
+                    xpub.xkey
+                        .into_descriptor_key(xpub.origin.clone(), descriptor_path)?
+                };
+                Ok(Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(derived_descriptor_key),
-                })
+                }))
             }
             BdkDescriptorKey::Secret(DescriptorSecretKey::XPrv(xprv), _, _) => {
-                let key_source: KeySource = (xprv.xkey.fingerprint(&secp), root_path.clone());
-                let derived_xprv = xprv.xkey.derive_priv(&secp, &root_path).unwrap();
-                let derived_descriptor_key = derived_xprv
-                    .into_descriptor_key(Some(key_source), derivation_path)
-                    .unwrap();
-                Arc::new(DescriptorKey {
+                let derived_descriptor_key = if let Some(path) = root_path {
+                    let key_source: KeySource = (xprv.xkey.fingerprint(&secp), path.clone());
+                    let derived_xpub = xprv.xkey.derive_priv(&secp, &path)?;
+                    derived_xpub.into_descriptor_key(Some(key_source), descriptor_path)?
+                } else {
+                    xprv.xkey
+                        .into_descriptor_key(xprv.origin.clone(), descriptor_path)?
+                };
+                Ok(Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(derived_descriptor_key),
-                })
+                }))
             }
-            // This case should never happen since we only create xkeys in the new() function
-            // in the future if we decide to also support SinglePriv and SinglePub keys then
-            // those types will need to be handled here.
-            _ => panic!(),
+            _ => Err(BdkError::Generic("Unsupported Key Type".to_string())),
         }
     }
 
@@ -228,33 +201,33 @@ impl DescriptorKey {
         let root_key = self.descriptor_key_mutex.lock().unwrap();
 
         match root_key.deref() {
-            BdkDescriptorKey::Public(descriptor_public_key, valid_networks, _) => {
+            BdkDescriptorKey::Public(descriptor_public_key, network, _) => {
                 Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(BdkDescriptorKey::from_public(
                         descriptor_public_key.clone(),
-                        valid_networks.clone(),
+                        network.clone(),
                     )),
                 })
             }
-            BdkDescriptorKey::Secret(descriptor_secret_key, valid_networks, _) => {
+            BdkDescriptorKey::Secret(descriptor_secret_key, network, _) => {
                 let descriptor_public_key = descriptor_secret_key.as_public(&secp).unwrap();
                 Arc::new(DescriptorKey {
                     descriptor_key_mutex: Mutex::new(BdkDescriptorKey::from_public(
-                        descriptor_public_key.clone(),
-                        valid_networks.clone(),
+                        descriptor_public_key,
+                        network.clone(),
                     )),
                 })
             }
         }
     }
 
-    fn into_string(&self) -> String {
+    fn as_string(&self) -> String {
         let descriptor_key = self.descriptor_key_mutex.lock().unwrap();
         match descriptor_key.deref() {
-            BdkDescriptorKey::Public(descriptor_public_key, _valid_networks, _) => {
+            BdkDescriptorKey::Public(descriptor_public_key, _, _) => {
                 descriptor_public_key.to_string()
             }
-            BdkDescriptorKey::Secret(descriptor_secret_key, _valid_networks, _) => {
+            BdkDescriptorKey::Secret(descriptor_secret_key, _, _) => {
                 descriptor_secret_key.to_string()
             }
         }
